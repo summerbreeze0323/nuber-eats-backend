@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import * as Joi from 'joi'; // 자바스크립트로 만들어진 모듈이기 때문에 이렇게 import
 import { ConfigModule } from '@nestjs/config';
-import { GraphQLModule } from '@nestjs/graphql';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { GraphQLModule } from '@nestjs/graphql'; // GraphQL decorators are for the GraphQL Schema.
+import { TypeOrmModule } from '@nestjs/typeorm'; // TypeORM decorators are for the DB.
 import { RestaurantsModule } from './restaurants/restaurants.module';
+import { Restaurant } from './restaurants/entities/restaurant.entity';
 
 @Module({
   imports: [
@@ -29,8 +30,9 @@ import { RestaurantsModule } from './restaurants/restaurants.module';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD, // 'host': 'localhost'로 되어있다면 패스워드를 묻지 않음
       database: process.env.DB_DATABASE,
-      'synchronize': true, // TypeORM이 db에 연결할 때 db를 나의 모듈의 현재 상태로 마이그래이션 한다는 뜻
-      'logging': true, // db에서 무슨일이 일어나는지 콘솔로 표시
+      synchronize: process.env.NODE_ENV !== 'prod', // TypeORM이 db에 연결할 때 db를 나의 모듈의 현재 상태로 마이그래이션 한다는 뜻
+      logging: true, // db에서 무슨일이 일어나는지 콘솔로 표시
+      entities: [Restaurant]
     }),
     GraphQLModule.forRoot({
       autoSchemaFile: true,
