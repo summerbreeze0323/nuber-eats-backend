@@ -1,6 +1,6 @@
 // Entity: db에 저장되는 데이터의 형태를 보여주는 모델
 import { Field, InputType, ObjectType } from "@nestjs/graphql";
-import { IsBoolean, IsString, Length } from "class-validator";
+import { IsBoolean, IsOptional, IsString, Length } from "class-validator";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 // @InputType({isAbstract: true}) // isAbstract: true는 InputType을 schema에 적용시키는 것은 원하지 않을 때 사용
@@ -11,29 +11,30 @@ export class Restaurant {
   @Field(type => Number)
   id: number;
 
-  @Field(type => String)
-  @Column()
-  @IsString()
-  @Length(5, 10) // min: 5, max: 10
+  @Field(type => String) // for graphql
+  @Column() // for database
+  @IsString() // 여기부터는 for validation
+  @Length(5, 30) // min: 5, max: 30
   name: string;
 
-  @Field(type => Boolean) // graphql playground DOCS에서 '!'값이 없다면 null 값을 허용하는 옵셔널(nullable) 값
-  @Column()
+  @Field(type => Boolean, { nullable: true }) // graphql playground DOCS에서 '!'값이 없다면 null 값을 허용하는 옵셔널(nullable) 값
+  @Column({ default: true })
+  @IsOptional()
   @IsBoolean()
   isVegan?: boolean;
 
-  @Field(type => String)
+  @Field(type => String, { defaultValue: '강남' })
   @Column()
   @IsString()
   address: string;
 
-  @Field(type => String)
-  @Column()
-  @IsString()
-  ownerName: string;
+  // @Field(type => String)
+  // @Column()
+  // @IsString()
+  // ownerName: string;
 
-  @Field(type => String)
-  @Column()
-  @IsString()
-  categoryName: string;
+  // @Field(type => String)
+  // @Column()
+  // @IsString()
+  // categoryName: string;
 }
