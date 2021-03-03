@@ -50,7 +50,7 @@ export class UsersService {
       const passwordCorrent = await user.checkPassword(password);
       if (!passwordCorrent) return { ok: false, error: '잘못된 비밀번호입니다.' }
 
-      const token = jwt.sign({ id: user.id }, this.config.get('SECRET_KEY'));
+      const token = jwt.sign({ id: user.id }, this.config.get('PRIVATE_KEY'));
 
       return { ok: true, token };
     } catch (error) {
