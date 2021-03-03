@@ -8,21 +8,24 @@ import { User } from "./entities/user.entity";
 export class UsersService {
   constructor(@InjectRepository(User) private readonly users: Repository<User>) {}
 
-  async createAccount({email, password, role}: CreateAccountInput) {
+  async createAccount({email, password, role}: CreateAccountInput): Promise<{ok:boolean, error?:string}> {
     // check new user
     try {
       const exists = await this.users.findOne({ email });
       if (exists) {
-        // make error
-        return;
+        return {
+          ok: false,
+          error: '해당 이메일을 가진 사용자가 이미 존재합니다.'
+        };
       }
       // create user
       await this.users.save(this.users.create({ email, password, role }));
-      return true;
+      return {ok: true};
     } catch (e) {
-      // make rror
-      return;
+      return {
+        ok: false,
+        error: '계정을 생성할 수 없습니다.'
+      };
     }
-    // hash the password
   }
 }
