@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CreateAccountInput } from "./dtos/create-account.dto";
+import { LoginInput } from "./dtos/login.dto";
 import { User } from "./entities/user.entity";
 
 @Injectable()
@@ -26,6 +27,26 @@ export class UsersService {
         ok: false,
         error: '계정을 생성할 수 없습니다.'
       };
+    }
+  }
+
+  async login({ email, password }: LoginInput): Promise<{ ok: boolean, error?: string, token?: string }> {
+    // jwt 만들고 user에게 주기
+    try {
+      // 이메일에 해당하는 유저 찾기
+      const user = await this.users.findOne({ email });
+      if (!user) return { ok: false, error: '이메일에 해당하는 사용자를 찾을 수 없습니다.' };
+
+      // 비밀번호가 맞는지 확인
+      const passwordCorrent = await user.checkPassword(password);
+      if (!passwordCorrent) return { ok: false, error: '잘못된 비밀번호입니다.' }
+
+      return { ok: true, token: 'Success login!' };
+    } catch (error) {
+      return {
+        ok: false,
+        error
+      }
     }
   }
 }
