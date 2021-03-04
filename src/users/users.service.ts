@@ -45,7 +45,7 @@ export class UsersService {
     // jwt 만들고 user에게 주기
     try {
       // 이메일에 해당하는 유저 찾기
-      const user = await this.users.findOne({ email });
+      const user = await this.users.findOne({ email }, { select: ['id','password'] });
       if (!user) return { ok: false, error: '이메일에 해당하는 사용자를 찾을 수 없습니다.' };
 
       // 비밀번호가 맞는지 확인
@@ -81,15 +81,21 @@ export class UsersService {
   }
 
   async verifyEmail(code: string): Promise<boolean> {
-    const verification = await this.verifications.findOne(
-      { code },
-      // { loadRelationIds: true }
-      { relations: ['user']}
-    );
-    if (verification) {
-      verification.user.verified = true;
-      this.users.save(verification.user);
+    try {
+      const verification = await this.verifications.findOne(
+        { code },
+        // { loadRelationIds: true }
+        { relations: ['user']}
+      );
+      if (verification) {
+        verification.user.verified = true;
+        this.users.save(verification.user);
+        return true;
+      }
+      throw new Error();
+    } catch (error) {
+      console.log(error);
+      return false;
     }
-    return false;
   }
 }
