@@ -27,6 +27,8 @@ type MockRepository<T = any> = Partial<Record<keyof Repository<User>, jest.Mock>
 describe('UserService', () => {
   let service: UsersService;
   let usersRepository: MockRepository<User>;
+  let verificationsRepository: MockRepository<Verification>;
+  let mailService: MailService;
 
   // 테스트 모듈 생성
   beforeAll(async () => {
@@ -53,8 +55,9 @@ describe('UserService', () => {
     }).compile();
 
     service = module.get<UsersService>(UsersService);
-
+    mailService = module.get<MailService>(MailService);
     usersRepository = module.get(getRepositoryToken(User));
+    verificationsRepository = module.get(getRepositoryToken(Verification));
   });
 
   it('should be defined', () => {
@@ -63,8 +66,8 @@ describe('UserService', () => {
 
   describe('createAccount', () => {
     const createAccountArgs = {
-      email: '',
-      password: '',
+      email: 'testmail@email.com',
+      password: 'pw1234',
       role: 0
     };
 
@@ -82,13 +85,32 @@ describe('UserService', () => {
     });
 
     it('should create a new user', async () => {
+      // 사전 처리
       usersRepository.findOne.mockResolvedValue(undefined);
       usersRepository.create.mockReturnValue(createAccountArgs);
-      await service.createAccount(createAccountArgs);
+      usersRepository.save.mockResolvedValue(createAccountArgs);
+      verificationsRepository.create.mockReturnValue({ user: createAccountArgs });
+      verificationsRepository.save.mockResolvedValue({ code: 'code' });
+
+      // 수행
+      const result = await service.createAccount(createAccountArgs);
+
+      // 결과 검증
       expect(usersRepository.create).toHaveBeenCalledTimes(1);
       expect(usersRepository.create).toHaveBeenCalledWith(createAccountArgs);
+
       expect(usersRepository.save).toHaveBeenCalledTimes(1);
       expect(usersRepository.save).toHaveBeenCalledWith(createAccountArgs);
+
+      expect(verificationsRepository.create).toHaveBeenCalledTimes(1);
+      expect(verificationsRepository.create).toHaveBeenCalledWith({ user: createAccountArgs });
+
+      expect(verificationsRepository.save).toHaveBeenCalledTimes(1);
+      expect(verificationsRepository.save).toHaveBeenCalledWith({ user: createAccountArgs });
+      
+      expect(mailService.sendVerificationEmail).toHaveBeenCalledTimes(1);
+      expect(mailService.sendVerificationEmail).toHaveBeenCalledWith(expect.any(String), expect.any(String));
+      expect(result).toEqual({ ok: true });
     })
   });
   it.todo('login');
