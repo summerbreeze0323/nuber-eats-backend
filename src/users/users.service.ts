@@ -25,6 +25,7 @@ export class UsersService {
     // check new user
     try {
       const exists = await this.users.findOne({ email });
+      console.log(exists)
       if (exists) {
         return {
           ok: false,

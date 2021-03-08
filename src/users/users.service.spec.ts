@@ -63,9 +63,21 @@ describe('UserService', () => {
 
   describe('createAccount', () => {
     // 유저가 존재하면 실패
-    it('should fail if user exists', () => {
-      
-    })
+    it('should fail if user exists', async () => {
+      usersRepository.findOne.mockResolvedValue({
+        id: 1,
+        email: 'test@email.com'
+      })
+      const result = await service.createAccount({
+        email: '',
+        password: '',
+        role: 0
+      });
+      expect(result).toMatchObject({
+        ok: false,
+        error: '해당 이메일을 가진 사용자가 이미 존재합니다.'
+      });
+    });
   });
   it.todo('login');
   it.todo('findById');
