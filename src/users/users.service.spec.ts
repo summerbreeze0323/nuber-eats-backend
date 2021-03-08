@@ -2,6 +2,7 @@ import { Test } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { JwtService } from "src/jwt/jwt.service";
 import { MailService } from "src/mail/mail.service";
+import { Repository } from "typeorm";
 import { User } from "./entities/user.entity";
 import { Verification } from "./entities/verification.entity";
 import { UsersService } from "./users.service";
@@ -21,8 +22,11 @@ const mockMailService = {
   sendVerificationEmail: jest.fn()
 }
 
+type MockRepository<T = any> = Partial<Record<keyof Repository<User>, jest.Mock>>;
+
 describe('UserService', () => {
-  let service: UsersService
+  let service: UsersService;
+  let usersRepository: MockRepository<User>;
 
   // 테스트 모듈 생성
   beforeAll(async () => {
@@ -49,13 +53,20 @@ describe('UserService', () => {
     }).compile();
 
     service = module.get<UsersService>(UsersService);
+
+    usersRepository = module.get(getRepositoryToken(User));
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
   })
 
-  it.todo('createAccount');
+  describe('createAccount', () => {
+    // 유저가 존재하면 실패
+    it('should fail if user exists', () => {
+      
+    })
+  });
   it.todo('login');
   it.todo('findById');
   it.todo('editProfile');
