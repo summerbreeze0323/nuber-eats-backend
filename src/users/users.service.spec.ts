@@ -7,11 +7,11 @@ import { User } from "./entities/user.entity";
 import { Verification } from "./entities/verification.entity";
 import { UsersService } from "./users.service";
 
-const mockRepository = {
+const mockRepository = () => ({
   findOne: jest.fn(),
   save: jest.fn(),
   create: jest.fn(),
-}
+})
 
 const mockJwtService = {
   sign: jest.fn(),
@@ -35,11 +35,11 @@ describe('UserService', () => {
         UsersService,
         {
           provide: getRepositoryToken(User),
-          useValue: mockRepository
+          useValue: mockRepository()
         },
         {
           provide: getRepositoryToken(Verification),
-          useValue: mockRepository
+          useValue: mockRepository()
         },
         {
           provide: JwtService,
@@ -62,22 +62,34 @@ describe('UserService', () => {
   })
 
   describe('createAccount', () => {
+    const createAccountArgs = {
+      email: '',
+      password: '',
+      role: 0
+    };
+
     // 유저가 존재하면 실패
     it('should fail if user exists', async () => {
       usersRepository.findOne.mockResolvedValue({
         id: 1,
         email: 'test@email.com'
       })
-      const result = await service.createAccount({
-        email: '',
-        password: '',
-        role: 0
-      });
+      const result = await service.createAccount(createAccountArgs);
       expect(result).toMatchObject({
         ok: false,
         error: '해당 이메일을 가진 사용자가 이미 존재합니다.'
       });
     });
+
+    it('should create a new user', async () => {
+      usersRepository.findOne.mockResolvedValue(undefined);
+      usersRepository.create.mockReturnValue(createAccountArgs);
+      await service.createAccount(createAccountArgs);
+      expect(usersRepository.create).toHaveBeenCalledTimes(1);
+      expect(usersRepository.create).toHaveBeenCalledWith(createAccountArgs);
+      expect(usersRepository.save).toHaveBeenCalledTimes(1);
+      expect(usersRepository.save).toHaveBeenCalledWith(createAccountArgs);
+    })
   });
   it.todo('login');
   it.todo('findById');
