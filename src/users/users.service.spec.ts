@@ -14,7 +14,7 @@ const mockRepository = () => ({
 })
 
 const mockJwtService = {
-  sign: jest.fn(),
+  sign: jest.fn(() => 'signed-token-baby'),
   verify: jest.fn(),
 }
 
@@ -29,9 +29,10 @@ describe('UserService', () => {
   let usersRepository: MockRepository<User>;
   let verificationsRepository: MockRepository<Verification>;
   let mailService: MailService;
+  let jwtService: JwtService;
 
   // 테스트 모듈 생성
-  beforeAll(async () => {
+  beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [
         UsersService,
@@ -56,6 +57,7 @@ describe('UserService', () => {
 
     service = module.get<UsersService>(UsersService);
     mailService = module.get<MailService>(MailService);
+    jwtService = module.get<JwtService>(JwtService);
     usersRepository = module.get(getRepositoryToken(User));
     verificationsRepository = module.get(getRepositoryToken(Verification));
   });
@@ -136,6 +138,35 @@ describe('UserService', () => {
       expect(usersRepository.findOne).toHaveBeenCalledWith(expect.any(Object), expect.any(Object));
       expect(result).toEqual({ ok: false, error: '이메일에 해당하는 사용자를 찾을 수 없습니다.' });
     });
+
+    it('should fail if the password is wrong', async () => {
+      const mockedUser = {
+        checkPassword: jest.fn(() => Promise.resolve(false))
+      };
+      usersRepository.findOne.mockResolvedValue(mockedUser);
+      const result = await service.login(loginArgs);
+      expect(result).toEqual({ ok: false, error: '잘못된 비밀번호입니다.' });
+    });
+
+    it('should return token if password correct', async () => {
+      const mockedUser = {
+        id: 1,
+        checkPassword: jest.fn(() => Promise.resolve(true))
+      };
+
+      usersRepository.findOne.mockResolvedValue(mockedUser);
+
+      const result = await service.login(loginArgs);
+      expect(jwtService.sign).toHaveBeenCalledTimes(1);
+      expect(jwtService.sign).toHaveBeenCalledWith(expect.any(Number));
+      expect(result).toEqual({ ok: true, token: 'signed-token-baby' });
+    });
+
+    it('should fail on exception', async () => {
+      usersRepository.findOne.mockRejectedValue(new Error());
+      const result = await service.login(loginArgs);
+      expect(result).toEqual({ ok: false, error: "Can't log user in." });
+    })
   });
   it.todo('findById');
   it.todo('editProfile');
