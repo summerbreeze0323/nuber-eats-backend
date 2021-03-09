@@ -8,7 +8,7 @@ import { EmailVar, MailModuleOptions } from './mail.interfaces';
 export class MailService {
   constructor(@Inject(CONFIG_OPTIONS) private readonly options: MailModuleOptions) {}
   
-  private async sendEmail(
+  async sendEmail(
     subject: string,
     template: string,
     emailVars: EmailVar[]
