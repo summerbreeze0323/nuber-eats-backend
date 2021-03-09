@@ -68,12 +68,11 @@ export class UsersService {
 
   async findById(id:number): Promise<UserProfileOutput> {
     try {
-      const user = await this.users.findOne({ id });
-      if (user) {
-        return {
-          ok: true,
-          user
-        }
+      // findOneOrFail: 유저를 찾지 못하면 error
+      const user = await this.users.findOneOrFail({ id });
+      return {
+        ok: true,
+        user
       }
     } catch (error) {
       return {
