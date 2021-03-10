@@ -6,6 +6,7 @@ import { getConnection, Repository } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Verification } from 'src/users/entities/verification.entity';
+import { query } from 'express';
 
 jest.mock('got', () => {
   return {
@@ -26,6 +27,11 @@ describe('UserModule (e2e)', () => {
   let verificationsRepository: Repository<Verification>;
   let jwtToken: string;
 
+  const baseTest = () => request(app.getHttpServer()).post(GRAPHQL_ENDPOINT);
+  const publicTest = (query: string) => baseTest().send({ query });
+  const privateTest = (query: string) =>
+    baseTest().set('X-JWT', jwtToken).send({ query });
+
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -44,22 +50,18 @@ describe('UserModule (e2e)', () => {
 
   describe('createAccount', () => {
     it('should create account', () => {
-      return request(app.getHttpServer())
-        .post(GRAPHQL_ENDPOINT)
-        .send({
-          query: `
-          mutation {
-            createAccount(input: {
-              email: "${testUser.email}",
-              password: "${testUser.password}",
-              role: Owner
-            }) {
-              ok
-              error
-            }
+      return publicTest(`
+        mutation {
+          createAccount(input: {
+            email: "${testUser.email}",
+            password: "${testUser.password}",
+            role: Owner
+          }) {
+            ok
+            error
           }
-          `
-        })
+        }
+        `)
         .expect(200)
         .expect(res => {
           expect(res.body.data.createAccount.ok).toBe(true); 
@@ -68,50 +70,47 @@ describe('UserModule (e2e)', () => {
     });
 
     it('should fail if account already exists', () => {
-      return request(app.getHttpServer())
-        .post(GRAPHQL_ENDPOINT)
-        .send({
-          query: `
-          mutation {
-            createAccount(input: {
-              email: "${testUser.email}",
-              password: "${testUser.password}",
-              role: Owner
-            }) {
-              ok
-              error
-            }
+      return publicTest(`
+        mutation {
+          createAccount(input: {
+            email: "${testUser.email}",
+            password: "${testUser.password}",
+            role: Owner
+          }) {
+            ok
+            error
           }
-          `
-        })
+        }
+        `)
         .expect(200)
         .expect(res => {
-          expect(res.body.data.createAccount.ok).toBe(false); 
-          expect(res.body.data.createAccount.error).toBe(
-            '해당 이메일을 가진 사용자가 이미 존재합니다.'
-          ); 
+          const {
+            body: {
+              data: {
+                createAccount: { ok, error },
+              },
+            },
+          } = res;
+          expect(ok).toBe(false);
+          expect(error).toBe('해당 이메일을 가진 사용자가 이미 존재합니다.');
         })
     });
   });
 
   describe('login', () => {
     it('should login with corrent credentials', () => {
-      return request(app.getHttpServer())
-        .post(GRAPHQL_ENDPOINT)
-        .send({
-          query: `
-          mutation {
-            login(input: {
-              email: "${testUser.email}",
-              password: "${testUser.password}",
-            }) {
-              ok
-              error
-              token
-            }
+      return publicTest(`
+        mutation {
+          login(input: {
+            email: "${testUser.email}",
+            password: "${testUser.password}",
+          }) {
+            ok
+            error
+            token
           }
-          `
-        })
+        }
+        `)
         .expect(200)
         .expect(res => {
           const {
@@ -127,22 +126,18 @@ describe('UserModule (e2e)', () => {
     });
 
     it('should bot be able to login with wrong credentials', () => {
-      return request(app.getHttpServer())
-        .post(GRAPHQL_ENDPOINT)
-        .send({
-          query: `
-          mutation {
-            login(input: {
-              email: "${testUser.email}",
-              password: "xxx",
-            }) {
-              ok
-              error
-              token
-            }
+      return publicTest(`
+        mutation {
+          login(input: {
+            email: "${testUser.email}",
+            password: "xxx",
+          }) {
+            ok
+            error
+            token
           }
-          `
-        })
+        }
+        `)
         .expect(200)
         .expect(res => {
           const {
@@ -167,22 +162,17 @@ describe('UserModule (e2e)', () => {
 
 
     it('should see a user\'s profile', () => {
-      return request(app.getHttpServer())
-        .post(GRAPHQL_ENDPOINT)
-        .set('X-JWT', jwtToken)
-        .send({
-          query: `
-          {
-            userProfile(userId: ${userId}) {
-              ok
-              error
-              user {
-                id
-              }
+      return privateTest(`
+        {
+          userProfile(userId: ${userId}) {
+            ok
+            error
+            user {
+              id
             }
           }
-          `
-        })
+        }
+        `)
         .expect(200)
         .expect(res => {
           const {
@@ -203,22 +193,17 @@ describe('UserModule (e2e)', () => {
     });
 
     it('should not find a profile', () => {
-      return request(app.getHttpServer())
-        .post(GRAPHQL_ENDPOINT)
-        .set('X-JWT', jwtToken)
-        .send({
-          query: `
-          {
-            userProfile(userId: 666) {
-              ok
-              error
-              user {
-                id
-              }
+      return privateTest(`
+        {
+          userProfile(userId: 666) {
+            ok
+            error
+            user {
+              id
             }
           }
-          `
-        })
+        }
+        `)
         .expect(200)
         .expect(res => {
           const {
@@ -237,18 +222,13 @@ describe('UserModule (e2e)', () => {
 
   describe('me', () => {
     it('should find my profile', () => {
-      return request(app.getHttpServer())
-        .post(GRAPHQL_ENDPOINT)
-        .set('X-JWT', jwtToken)
-        .send({
-          query: `
-          {
-            me {
-              email
-            }
+      return privateTest(`
+        {
+          me {
+            email
           }
-          `
-        })
+        }
+        `)
         .expect(200)
         .expect(res => {
           const {
@@ -259,21 +239,17 @@ describe('UserModule (e2e)', () => {
             }
           } = res;
           expect(email).toBe(testUser.email);
-      })
+        })
     });
 
     it('should not allow logged out user', () => {
-      return request(app.getHttpServer())
-        .post(GRAPHQL_ENDPOINT)
-        .send({
-          query: `
-          {
-            me {
-              email
-            }
+      return publicTest(`
+        {
+          me {
+            email
           }
-          `
-        })
+        }
+        `)
         .expect(200)
         .expect(res => {
           const {
@@ -281,7 +257,7 @@ describe('UserModule (e2e)', () => {
           } = res;
           const [error] = errors;
           expect(error.message).toBe('Forbidden resource');
-      })
+        })
     });
   });
 
@@ -289,21 +265,16 @@ describe('UserModule (e2e)', () => {
     const NEW_EMAIL = 'julee0323@naver.com';
 
     it('should change email', () => {
-      return request(app.getHttpServer())
-        .post(GRAPHQL_ENDPOINT)
-        .set('X-JWT', jwtToken)
-        .send({
-          query: `
-            mutation {
-              editProfile(input:{
-                email: "${NEW_EMAIL}"
-              }) {
-                ok
-                error
-              }
-            }
-        `,
-        })
+      return privateTest(`
+        mutation {
+          editProfile(input:{
+            email: "${NEW_EMAIL}"
+          }) {
+            ok
+            error
+          }
+        }
+        `)
         .expect(200)
         .expect(res => {
           const {
@@ -319,18 +290,13 @@ describe('UserModule (e2e)', () => {
     });
 
     it('should have new email', () => {
-      return request(app.getHttpServer())
-        .post(GRAPHQL_ENDPOINT)
-        .set('X-JWT', jwtToken)
-        .send({
-          query: `
-          {
-            me {
-              email
-            }
+      return privateTest(`
+        {
+          me {
+            email
           }
-        `,
-        })
+        }
+        `)
         .expect(200)
         .expect(res => {
           const {
@@ -354,20 +320,16 @@ describe('UserModule (e2e)', () => {
     });
 
     it('should verify email', () => {
-      return request(app.getHttpServer())
-        .post(GRAPHQL_ENDPOINT)
-        .send({
-          query: `
-          mutation {
-            verifyEmail(input:{
-              code: "${verificationCode}"
-            }){
-              ok
-              error
-            }
+      return publicTest(`
+        mutation {
+          verifyEmail(input:{
+            code: "${verificationCode}"
+          }){
+            ok
+            error
           }
-        `,
-        })
+        }
+        `)
         .expect(200)
         .expect(res => {
           const {
@@ -379,24 +341,20 @@ describe('UserModule (e2e)', () => {
           } = res;
           expect(ok).toBe(true);
           expect(error).toBe(null);
-      })
+        })
     });
 
     it('should fail on verification code not found', () => {
-      return request(app.getHttpServer())
-        .post(GRAPHQL_ENDPOINT)
-        .send({
-          query: `
-          mutation {
-            verifyEmail(input:{
-              code: "xxx"
-            }){
-              ok
-              error
-            }
+      return publicTest(`
+        mutation {
+          verifyEmail(input:{
+            code: "xxx"
+          }){
+            ok
+            error
           }
-        `,
-        })
+        }
+        `)
         .expect(200)
         .expect(res => {
           const {
@@ -408,7 +366,7 @@ describe('UserModule (e2e)', () => {
           } = res;
           expect(ok).toBe(false);
           expect(error).toBe('Verification not found.');
-      })
+        })
     });
   });
 });
