@@ -19,7 +19,7 @@ import { MailModule } from './mail/mail.module';
       // production 환경일 때는 ConfigModule이 환경변수 파일을 무시하게 됨
       ignoreEnvFile: process.env.NODE_ENV === 'prod',
       validationSchema: Joi.object({
-        NODE_ENV: Joi.string().valid('dev', 'prod').required(),
+        NODE_ENV: Joi.string().valid('dev', 'prod', 'test').required(),
         DB_HOST: Joi.string().required(),
         DB_PORT: Joi.string().required(),
         DB_USERNAME: Joi.string().required(),
@@ -39,7 +39,7 @@ import { MailModule } from './mail/mail.module';
       password: process.env.DB_PASSWORD, // 'host': 'localhost'로 되어있다면 패스워드를 묻지 않음
       database: process.env.DB_DATABASE,
       synchronize: process.env.NODE_ENV !== 'prod', // TypeORM이 db에 연결할 때 db를 나의 모듈의 현재 상태로 마이그래이션 한다는 뜻
-      logging: true, // db에서 무슨일이 일어나는지 콘솔로 표시
+      logging: process.env.NODE_ENV !== 'prod' && process.env.NODE_ENV !== 'test', // db에서 무슨일이 일어나는지 콘솔로 표시
       entities: [User, Verification]
     }),
     GraphQLModule.forRoot({
