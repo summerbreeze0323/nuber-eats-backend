@@ -1,4 +1,4 @@
-import { Args, Int, Mutation, Query, ResolveField, Resolver } from "@nestjs/graphql";
+import { Args, Int, Mutation, Parent, Query, ResolveField, Resolver } from "@nestjs/graphql";
 import { AuthUser } from "src/auth/auth-user.decorator";
 import { Role } from "src/auth/role.decorator";
 import { EditProfileOutput } from "src/users/dtos/edit-profile.dto";
@@ -48,8 +48,8 @@ export class CategoryResolver {
   constructor(private readonly restaurantService: RestaurantService) { }
 
   @ResolveField(type => Int) // 매 request마다 계산된 field를 만들어 줌
-  restaurantCount(): number {
-    return 80;
+  restaurantCount(@Parent() category: Category): Promise<number> {
+    return this.restaurantService.countRestaurant(category);
   }
   
   @Query(type => AllCategoriesOutput)
