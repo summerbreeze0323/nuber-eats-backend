@@ -22,7 +22,7 @@ export class Restaurant extends CoreEntity {
   // @IsBoolean()
   // isVegan?: boolean;
 
-  @Field(type => String, { defaultValue: '강남' })
+  @Field(type => String)
   @Column()
   @IsString()
   address: string;
