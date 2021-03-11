@@ -2,10 +2,11 @@
 import { Field, InputType, ObjectType } from "@nestjs/graphql";
 import { IsBoolean, IsOptional, IsString, Length } from "class-validator";
 import { CoreEntity } from "src/common/entities/core.entity";
+import { User } from "src/users/entities/user.entity";
 import { Column, Entity, ManyToOne } from "typeorm";
 import { Category } from "./category.entity";
 
-// @InputType({isAbstract: true}) // isAbstract: true는 InputType을 schema에 적용시키는 것은 원하지 않을 때 사용
+@InputType('RestaurantInputType', {isAbstract: true}) // isAbstract: true는 InputType을 schema에 적용시키는 것은 원하지 않을 때 사용
 @ObjectType() // @ObjectType():자동으로 스키마를 빌드하기 위해 사용하는 GraphQL decorator
 @Entity() // for TypeORM
 export class Restaurant extends CoreEntity {
@@ -31,10 +32,18 @@ export class Restaurant extends CoreEntity {
   @IsString()
   coverImg: string;
 
-  @Field(type => Category)
+  @Field(type => Category, { nullable: true })
   @ManyToOne(
     type => Category,
     category => category.restaurants,
+    { nullable: true, onDelete: 'SET NULL' }
   )
   category: Category;
+
+  @Field(type => User)
+  @ManyToOne(
+    type => User,
+    user => user.restaurants
+  )
+  owner: User;
 }
