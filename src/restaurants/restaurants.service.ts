@@ -7,6 +7,7 @@ import { User } from "src/users/entities/user.entity";
 import { Category } from "./entities/category.entity";
 import { EditRestaurantInput, EditRestaurantOutput } from "./dtos/edit-restaurant.dto";
 import { CategoryRepository } from "./repositories/category.repository";
+import { DeleteRestaurantInput, DeleteRestaurantOutput } from "./dtos/delete-restaurant.dto";
 
 @Injectable()
 export class RestaurantService {
@@ -41,15 +42,15 @@ export class RestaurantService {
     editRestaurantInput: EditRestaurantInput
   ): Promise<EditRestaurantOutput> {
     try {
-      const restaurant = await this.restaurants.findOne(
-        editRestaurantInput.restaurantId
-      );
+      // const restaurant = await this.restaurants.findOne(
+      //   editRestaurantInput.restaurantId
+      // );
     
-      if (!restaurant) return { ok: false, error: 'Restaurant not found.' };
+      // if (!restaurant) return { ok: false, error: 'Restaurant not found.' };
 
-      if (owner.id !== restaurant.ownerId) {
-        return { ok: false, error: 'You can\'t edit restaurant that you don\'t owner.' };
-      }
+      // if (owner.id !== restaurant.ownerId) {
+      //   return { ok: false, error: 'You can\'t edit restaurant that you don\'t owner.' };
+      // }
 
       let category: Category = null;
       if (editRestaurantInput.categoryName) {
@@ -65,6 +66,25 @@ export class RestaurantService {
       return { ok: true }
     } catch (error) {
       return { ok: false, error: 'Could not edit restaurant.' };
+    }
+  }
+
+  async deleteRestaurant(
+    owner: User,
+    {restaurantId}: DeleteRestaurantInput
+  ): Promise<DeleteRestaurantOutput> {
+    try {
+      const restaurant = await this.restaurants.findOne(restaurantId);
+    
+      if (!restaurant) return { ok: false, error: 'Restaurant not found.' };
+
+      if (owner.id !== restaurant.ownerId) {
+        return { ok: false, error: 'You can\'t edit restaurant that you don\'t owner.' };
+      }
+
+      await this.restaurants.delete(restaurantId);
+    } catch (error) {
+      return { ok: false, error: 'Could not delete restaurant.' };
     }
   }
 }
