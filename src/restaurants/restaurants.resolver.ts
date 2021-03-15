@@ -59,10 +59,7 @@ export class CategoryResolver {
   }
 
   @Query(type => CategoryOutput)
-  categry(@Args() categoryInput: CategoryInput): Promise<CategoryOutput> {
-    // return this.restaurantService.findCategoryBySlug(categoryInput);
-    const result = this.restaurantService.findCategoryBySlug(categoryInput);
-    console.log(result)
-    return result;
+  categry(@Args('input') categoryInput: CategoryInput): Promise<CategoryOutput> {
+    return this.restaurantService.findCategoryBySlug(categoryInput);
   }
 }
