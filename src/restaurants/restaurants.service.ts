@@ -1,7 +1,7 @@
 import { CreateRestaurantInput, CreateRestaurantOutput } from "./dtos/create-restaurant.dto";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { Like, Repository, TreeRepository } from "typeorm";
 import { Restaurant } from "./entities/restaurant.entity";
 import { User } from "src/users/entities/user.entity";
 import { Category } from "./entities/category.entity";
@@ -11,6 +11,8 @@ import { DeleteRestaurantInput, DeleteRestaurantOutput } from "./dtos/delete-res
 import { AllCategoriesOutput } from "./dtos/all-categories.dto";
 import { CategoryInput, CategoryOutput } from "./dtos/category.dto";
 import { RestaurantsInput, RestaurantsOutput } from "./dtos/restaurants.dto";
+import { RestaurantInput, RestaurantOutput } from "./dtos/restaurant.dto";
+import { SearchRestaurantOutput, SearchRestaurantInput } from "./dtos/search-restaurant.dto";
 
 @Injectable()
 export class RestaurantService {
@@ -156,6 +158,41 @@ export class RestaurantService {
       return {
         ok: false,
         error: 'Could not load restaurants.'
+      }
+    }
+  }
+
+  async FindRestaurantById({ restaurantId }: RestaurantInput): Promise<RestaurantOutput> {
+    try {
+      const restaurant = await this.restaurants.findOne(restaurantId);
+      if (!restaurant) {
+        return {
+          ok: false,
+          error: 'Restaurant not found'
+        };
+      }
+      console.log(restaurant)
+      return { ok: true, restaurant };
+    } catch (error) {
+      return {
+        ok: false,
+        error: 'Could not load restaurant.'
+      }
+    }
+  }
+
+  async searchRestaurantByName({ query, page }: SearchRestaurantInput): Promise<SearchRestaurantOutput> {
+    try {
+      const [restaurants, totalResults] = await this.restaurants.findAndCount({
+        where: {
+          name: Like(`%${query}%`)
+        }
+      });
+      return { ok: true, restaurants };
+    } catch (error) {
+      return {
+        ok: false,
+        error: 'Could not search for restaurants.'
       }
     }
   }
