@@ -13,6 +13,7 @@ import { Restaurant } from './restaurants/entities/restaurant.entity';
 import { Category } from './restaurants/entities/category.entity';
 import { RestaurantsModule } from './restaurants/restaurants.module';
 import { AuthModule } from './auth/auth.module';
+import { Dish } from './restaurants/entities/dish.entity';
 
 @Module({
   imports: [
@@ -44,7 +45,7 @@ import { AuthModule } from './auth/auth.module';
       database: process.env.DB_DATABASE,
       synchronize: process.env.NODE_ENV !== 'prod', // TypeORM이 db에 연결할 때 db를 나의 모듈의 현재 상태로 마이그래이션 한다는 뜻
       logging: process.env.NODE_ENV !== 'prod' && process.env.NODE_ENV !== 'test', // db에서 무슨일이 일어나는지 콘솔로 표시
-      entities: [User, Verification, Restaurant, Category]
+      entities: [User, Verification, Restaurant, Category, Dish]
     }),
     GraphQLModule.forRoot({
       autoSchemaFile: true,
