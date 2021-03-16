@@ -18,6 +18,8 @@ import { Order } from './orders/entities/order.entity';
 import { OrdersModule } from './orders/orders.module';
 import { OrderItem } from './orders/entities/order-item.entity';
 import { CommonModule } from './common/common.module';
+import { PaymentsModule } from './payments/payments.module';
+import { Payment } from './payments/entities/payment.entity';
 
 @Module({
   imports: [
@@ -49,7 +51,7 @@ import { CommonModule } from './common/common.module';
       database: process.env.DB_DATABASE,
       synchronize: process.env.NODE_ENV !== 'prod', // TypeORM이 db에 연결할 때 db를 나의 모듈의 현재 상태로 마이그래이션 한다는 뜻
       logging: process.env.NODE_ENV !== 'prod' && process.env.NODE_ENV !== 'test', // db에서 무슨일이 일어나는지 콘솔로 표시
-      entities: [User, Verification, Restaurant, Category, Dish, Order, OrderItem]
+      entities: [User, Verification, Restaurant, Category, Dish, Order, OrderItem, Payment]
     }),
     GraphQLModule.forRoot({
       installSubscriptionHandlers: true, // 웹 소켓 기능 사용
@@ -79,7 +81,8 @@ import { CommonModule } from './common/common.module';
     UsersModule,
     RestaurantsModule,
     OrdersModule,
-    CommonModule
+    CommonModule,
+    PaymentsModule,
   ],
   controllers: [],
   providers: [],
