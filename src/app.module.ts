@@ -3,6 +3,7 @@ import * as Joi from 'joi'; // 자바스크립트로 만들어진 모듈이기 �
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql'; // GraphQL decorators are for the GraphQL Schema.
 import { TypeOrmModule } from '@nestjs/typeorm'; // TypeORM decorators are for the DB.
+import { ScheduleModule } from '@nestjs/schedule';
 import { UsersModule } from './users/users.module';
 import { User } from './users/entities/user.entity';
 import { JwtModule } from './jwt/jwt.module';
@@ -69,6 +70,7 @@ import { Payment } from './payments/entities/payment.entity';
         }
       }
     }),
+    ScheduleModule.forRoot(),
     JwtModule.forRoot({
       privateKey: process.env.PRIVATE_KEY
     }),
