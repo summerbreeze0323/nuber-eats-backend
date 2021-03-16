@@ -24,7 +24,7 @@ export class Order extends CoreEntity {
   @ManyToOne(
     type => User,
     user => user.orders,
-    { onDelete: 'SET NULL', nullable: true },
+    { onDelete: 'SET NULL', nullable: true, eager: true },
   )
   customer?: User;
 
@@ -35,7 +35,7 @@ export class Order extends CoreEntity {
   @ManyToOne(
     type => User,
     user => user.rides,
-    { onDelete: 'SET NULL', nullable: true },
+    { onDelete: 'SET NULL', nullable: true, eager: true },
   )
   driver?: User;
 
@@ -46,18 +46,18 @@ export class Order extends CoreEntity {
   @ManyToOne(
     type => Restaurant,
     user => user.orders,
-    { onDelete: 'SET NULL', nullable: true },
+    { onDelete: 'SET NULL', nullable: true, eager: true },
   )
   restaurant?: Restaurant;
 
   @Field(type => [OrderItem])
-  @ManyToMany(type => OrderItem)
+  @ManyToMany(type => OrderItem, { eager: true })
   @JoinTable()
   items: OrderItem[];
 
   @Column({ nullable: true })
   @Field(type => Float, { nullable: true })
-    @IsNumber()
+  @IsNumber()
   total?: number;
 
   @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.Pending })
