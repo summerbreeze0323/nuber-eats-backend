@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { PubSub } from 'graphql-subscriptions';
-import { NEW_PENDING_ORDER, PUB_SUB } from "src/common/common.constants";
+import { NEW_COOKED_ORDER, NEW_PENDING_ORDER, PUB_SUB } from "src/common/common.constants";
 import { Dish } from "src/restaurants/entities/dish.entity";
 import { Restaurant } from "src/restaurants/entities/restaurant.entity";
 import { User, UserRole } from "src/users/entities/user.entity";
@@ -204,12 +204,18 @@ export class OrderService {
 
       if (!canEdit) return { ok: false, error: 'You can\'t do that.' };
 
-      await this.orders.save([
-        {
-          id: orderId,
-          status
+      await this.orders.save({
+        id: orderId,
+        status
+      });
+
+      if (user.role === UserRole.Owner) {
+        if (status === OrderStatus.Cooked) {
+          await this.pubSub.publish(NEW_COOKED_ORDER, {
+            cookedOrders: { ...order, status }
+          });
         }
-      ]);
+      }
 
       return { ok: true };
     } catch (error) {
