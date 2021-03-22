@@ -17,6 +17,9 @@ import { CreateDishInput, CreateDishOutput } from "./dtos/create-dish.dto";
 import { Dish } from "./entities/dish.entity";
 import { EditDishInput, EditDishOutput } from "./dtos/edit-dish.dto";
 import { DeleteDishInput, DeleteDishOutput } from "./dtos/delete-dish.dto";
+import { MyRestaurantsOutput } from "./dtos/my-restaurants.dto";
+
+const perPage = 3; // 한 페이지에 보여지는 아이템 수
 
 @Injectable()
 export class RestaurantService {
@@ -99,6 +102,18 @@ export class RestaurantService {
     }
   }
 
+  async myRestaurants(owner: User): Promise<MyRestaurantsOutput> {
+    try {
+      const restaurants = await this.restaurants.find({ owner });
+      return {
+        restaurants,
+        ok: true,
+      };
+    } catch (error) {
+      return { ok: false, error: 'Could not find restaurants.' }
+    }
+  }
+
   async allCategories(): Promise<AllCategoriesOutput> {
     try {
       const categories = await this.categories.find();
@@ -132,8 +147,8 @@ export class RestaurantService {
         order: {
           isPromoted: 'DESC'
         },
-        take: 25,
-        skip: (page - 1) * 25
+        take: perPage,
+        skip: (page - 1) * perPage
       });
       const totalResults = await this.countRestaurant(category);
       
@@ -141,7 +156,8 @@ export class RestaurantService {
         ok: true,
         restaurants,
         category,
-        totalPages: Math.ceil(totalResults / 25)
+        totalPages: Math.ceil(totalResults / perPage),
+        totalResults
       }
     } catch (error) {
       return {
@@ -154,8 +170,8 @@ export class RestaurantService {
   async allRestaurants({ page }: RestaurantsInput): Promise<RestaurantsOutput> {
     try {
       const [restaurants, totalResults] = await this.restaurants.findAndCount({
-        skip: (page - 1) * 25,
-        take: 25,
+        skip: (page - 1) * perPage,
+        take: perPage,
         order: {
           isPromoted: 'DESC'
         },
@@ -163,7 +179,7 @@ export class RestaurantService {
       return {
         ok: true,
         results: restaurants,
-        totalPages: Math.ceil(totalResults / 25),
+        totalPages: Math.ceil(totalResults / perPage),
         totalResults
       }
     } catch (error) {
@@ -201,14 +217,14 @@ export class RestaurantService {
         where: {
           name: Raw(name => `${name} ILIKE '%${query}%'`) // 대소문자 구분없이 검색하기 위해 sql 사용
         },
-        take: 25,
-        skip: (page - 1) * 25
+        take: perPage,
+        skip: (page - 1) * perPage
       });
       return {
         ok: true,
         restaurants,
         totalResults,
-        totalPages: Math.ceil(totalResults / 25)
+        totalPages: Math.ceil(totalResults / perPage)
       };
     } catch (error) {
       return {
