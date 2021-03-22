@@ -18,6 +18,7 @@ import { Dish } from "./entities/dish.entity";
 import { EditDishInput, EditDishOutput } from "./dtos/edit-dish.dto";
 import { DeleteDishInput, DeleteDishOutput } from "./dtos/delete-dish.dto";
 import { MyRestaurantsOutput } from "./dtos/my-restaurants.dto";
+import { MyRestaurantInput, MyRestaurantOutput } from "./dtos/my-restaurant";
 
 const perPage = 3; // 한 페이지에 보여지는 아이템 수
 
@@ -114,6 +115,27 @@ export class RestaurantService {
       };
     } catch (error) {
       return { ok: false, error: 'Could not find restaurants.' }
+    }
+  }
+
+  async myRestaurant(
+    owner: User,
+    { id }: MyRestaurantInput
+  ): Promise<MyRestaurantOutput> {
+    try {
+      const restaurant = await this.restaurants.findOne(
+        { owner, id },
+        { relations: ['menu', 'orders'] },
+      );
+      return {
+        restaurant,
+        ok: true,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: 'Could not find restaurant',
+      };
     }
   }
 
