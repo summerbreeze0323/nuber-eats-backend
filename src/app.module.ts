@@ -57,6 +57,7 @@ import { UploadsModule } from './uploads/uploads.module';
       ssl: { rejectUnauthorized: false }
     }),
     GraphQLModule.forRoot({
+      playground: process.env.NODE_ENV !== 'production',
       installSubscriptionHandlers: true, // 웹 소켓 기능 사용
       autoSchemaFile: true,
       context: ({ req, connection }) => {
