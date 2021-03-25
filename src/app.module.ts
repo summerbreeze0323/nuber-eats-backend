@@ -30,7 +30,7 @@ import { UploadsModule } from './uploads/uploads.module';
       envFilePath: process.env.NODE_ENV === 'dev' ? '.env.dev' : '.env.test',
       // ignoreEnvFile: 서버에 deploy 할 떄 환경변수 파일을 사용하지 않는다는 옵션
       // production 환경일 때는 ConfigModule이 환경변수 파일을 무시하게 됨
-      ignoreEnvFile: process.env.NODE_ENV === 'NODE_ENV',
+      ignoreEnvFile: process.env.NODE_ENV === 'production',
       validationSchema: Joi.object({
         NODE_ENV: Joi.string().valid('dev', 'production', 'test').required(),
         DB_HOST: Joi.string().required(),
