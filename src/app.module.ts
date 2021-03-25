@@ -46,11 +46,15 @@ import { UploadsModule } from './uploads/uploads.module';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST,
-      port: +process.env.DB_PORT,
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD, // 'host': 'localhost'로 되어있다면 패스워드를 묻지 않음
-      database: process.env.DB_DATABASE,
+      ...(process.env.DATABASE_URL
+        ? ({ url: process.env.DATABASE_URL })
+        : {
+            host: process.env.DB_HOST,
+            port: +process.env.DB_PORT,
+            username: process.env.DB_USERNAME,
+            password: process.env.DB_PASSWORD, // 'host': 'localhost'로 되어있다면 패스워드를 묻지 않음
+            database: process.env.DB_DATABASE,
+          }),
       synchronize: process.env.NODE_ENV !== 'production', // TypeORM이 db에 연결할 때 db를 나의 모듈의 현재 상태로 마이그래이션 한다는 뜻
       logging: process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test', // db에서 무슨일이 일어나는지 콘솔로 표시
       entities: [User, Verification, Restaurant, Category, Dish, Order, OrderItem, Payment],
